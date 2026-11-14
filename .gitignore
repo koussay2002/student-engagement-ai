@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.pytest_cache/
+*.pt
+*.onnx
+*.engine
+*.mp4
+*.avi
+*.mov
+.DS_Store
+.idea/
+.vscode/

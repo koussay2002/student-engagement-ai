@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classroom engagement</title>
+<style>
+:root{
+  --bg:#EEF1F4; --panel:#FFFFFF; --ink:#1B2430; --muted:#5B6877; --line:#D9DFE6;
+  --focused:#1F7A4A; --confused:#6B5BB5; --drowsy:#B7791F; --distracted:#C0392B; --unknown:#98A2AF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.45 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-variant-numeric:tabular-nums}
+header{display:flex;align-items:baseline;gap:16px;padding:18px 24px 6px}
+h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+#conn{font-size:13px;color:var(--muted)}
+#conn[data-ok="1"]{color:var(--focused)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;padding:12px 24px 28px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.video{overflow:hidden}
+.video img{display:block;width:100%;height:auto;background:#cfd6de;min-height:240px}
+.mix-wrap{padding:16px 18px 18px;display:grid;gap:14px}
+.headline{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}
+.big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.cap{font-size:13px;color:var(--muted);margin-top:4px}
+#mix{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--line)}
+#mix div{min-width:4px;transition:flex-grow .4s}
+#legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--c)}
+canvas{width:100%;height:56px;display:block}
+aside{display:flex;flex-direction:column;min-height:0}
+aside h2{font-size:15px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:650}
+#roster{list-style:none;margin:0;padding:0;overflow:auto;max-height:calc(100vh - 140px)}
+.row{display:grid;grid-template-columns:78px 1fr 34px;gap:4px 10px;align-items:center;
+  padding:11px 16px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.sid{font-weight:600}
+.state{font-size:13.5px}
+.num{text-align:right;font-weight:650}
+.meter{grid-column:1/3;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--c);transition:width .4s}
+.pred{grid-column:1/4;font-size:12.5px;color:var(--muted)}
+.empty{padding:22px 16px;color:var(--muted)}
+[data-s="Focused"]{--c:var(--focused)} [data-s="Confused"]{--c:var(--confused)}
+[data-s="Drowsy"]{--c:var(--drowsy)} [data-s="Distracted"]{--c:var(--distracted)}
+[data-s="Unknown"]{--c:var(--unknown)}
+@media (max-width:900px){main{grid-template-columns:1fr;padding:12px}#roster{max-height:none}}
+@media (prefers-reduced-motion:reduce){#mix div,.meter i{transition:none}}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Classroom engagement</h1>
+  <span id="conn">Connecting</span>
+</header>
+<main>
+  <section class="panel video">
+    <img src="/video" alt="Live classroom view with detected students">
+    <div class="mix-wrap">
+      <div class="headline">
+        <div><div class="big" id="avg">–</div><div class="cap">Class engagement</div></div>
+        <div><div class="big" id="count">0</div><div class="cap">Students tracked</div></div>
+        <div><div class="big" id="fps">0</div><div class="cap">Frames per second</div></div>
+      </div>
+      <div id="mix" role="img" aria-label="Share of students by state"></div>
+      <div id="legend"></div>
+      <canvas id="spark" height="56" aria-label="Class engagement over the last 30 seconds"></canvas>
+    </div>
+  </section>
+  <aside class="panel">
+    <h2>Students, lowest engagement first</h2>
+    <ul id="roster"><li class="empty">No students detected yet. Point the camera at the room, or start with <code>--source class.mp4</code>.</li></ul>
+  </aside>
+</main>
+<script>
+const STATES = ["Focused","Confused","Drowsy","Distracted","Unknown"];
+const $ = id => document.getElementById(id);
+const history = [];
+
+function seg(state, n){ const d = document.createElement("div"); d.dataset.s = state;
+  d.style.background = "var(--c)"; d.style.flexGrow = n; return d; }
+
+function render(d){
+  const sum = d.summary;
+  $("avg").textContent = sum.count ? Math.round(sum.average) : "–";
+  $("count").textContent = sum.count;
+  $("fps").textContent = Math.round(d.fps);
+
+  const mix = $("mix"), legend = $("legend");
+  mix.replaceChildren(); legend.replaceChildren();
+  for (const s of STATES){
+    const n = sum.counts[s] || 0;
+    if (!n) continue;
+    mix.appendChild(seg(s, n));
+    const item = document.createElement("span"); item.dataset.s = s;
+    const dot = document.createElement("span"); dot.className = "dot";
+    item.append(dot, `${s} ${n}`); legend.appendChild(item);
+  }
+
+  const list = $("roster");
+  list.replaceChildren();
+  if (!d.students.length){
+    const li = document.createElement("li"); li.className = "empty";
+    li.textContent = "No students detected yet."; list.appendChild(li);
+  }
+  for (const st of [...d.students].sort((a,b) => a.score - b.score)){
+    const li = document.createElement("li"); li.className = "row"; li.dataset.s = st.label;
+    const id = document.createElement("span"); id.className = "sid"; id.textContent = st.id;
+    const state = document.createElement("span"); state.className = "state";
+    const dot = document.createElement("span"); dot.className = "dot";
+    state.append(dot, `${st.label}, ${st.confidence}% sure`);
+    const num = document.createElement("span"); num.className = "num"; num.textContent = st.score;
+    const meter = document.createElement("span"); meter.className = "meter";
+    const bar = document.createElement("i"); bar.style.width = st.score + "%"; meter.appendChild(bar);
+    const arrow = st.trend >= 2 ? "rising" : st.trend <= -2 ? "falling" : "steady";
+    const pred = document.createElement("span"); pred.className = "pred";
+    pred.textContent = `Forecast in 5 min: ${st.predicted}/100 (${arrow})`;
+    li.append(id, state, num, meter, pred); list.appendChild(li);
+  }
+
+  if (sum.count){ history.push(sum.average); if (history.length > 150) history.shift(); }
+  spark();
+}
+
+function spark(){
+  const c = $("spark"), r = devicePixelRatio || 1;
+  c.width = c.clientWidth * r; c.height = 56 * r;
+  const g = c.getContext("2d"); g.scale(r, r);
+  const w = c.clientWidth, h = 56;
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--line");
+  g.beginPath(); g.moveTo(0, h/2); g.lineTo(w, h/2); g.stroke();
+  if (history.length < 2) return;
+  g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink");
+  g.lineWidth = 2; g.beginPath();
+  history.forEach((v, i) => { const x = i / (history.length - 1) * w, y = h - 4 - v / 100 * (h - 8);
+    i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.stroke();
+}
+
+function connect(){
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  ws.onopen = () => { $("conn").textContent = "Live"; $("conn").dataset.ok = "1"; };
+  ws.onmessage = e => render(JSON.parse(e.data));
+  ws.onclose = () => { $("conn").textContent = "Reconnecting"; $("conn").dataset.ok = "0"; setTimeout(connect, 1500); };
+}
+connect();
+</script>
+</body>
+</html>
