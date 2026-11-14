@@ -23,13 +23,12 @@ class Detector:
         self.model = YOLO(model)
         self.imgsz, self.conf = imgsz, conf
         self.device = device or _auto_device()
-        self.half = self.device.startswith("cuda")  # FP16 only on NVIDIA GPUs
         self(np.zeros((imgsz, imgsz, 3), dtype=np.uint8))  # warm-up
 
     def __call__(self, frame):
         r = self.model.predict(frame, imgsz=self.imgsz, conf=self.conf,
                                classes=[PERSON, PHONE], device=self.device,
-                               half=self.half, verbose=False)[0]
+                               verbose=False)[0]
         persons, phones = [], []
         if r.boxes is not None and len(r.boxes):
             xyxy = r.boxes.xyxy.cpu().numpy()

@@ -147,11 +147,14 @@ class Pipeline:
                 frames += 1
                 if now - t_fps >= 1.0:
                     fps, frames, t_fps = frames / (now - t_fps), 0, now
-                live = [(t.sid, self.results[t.sid]) for t in tracks if t.sid in self.results]
-                students = [{"id": sid, "label": r.label, "score": round(r.score),
+                fh, fw = frame.shape[:2]
+                live = [(t, self.results[t.sid]) for t in tracks if t.sid in self.results]
+                students = [{"id": t.sid, "label": r.label, "score": round(r.score),
                              "confidence": round(r.confidence * 100),
-                             "predicted": round(r.predicted), "trend": round(r.trend, 1)}
-                            for sid, r in live]
+                             "predicted": round(r.predicted), "trend": round(r.trend, 1),
+                             "x": round((t.box[0] + t.box[2]) / 2 / fw, 3),
+                             "y": round((t.box[1] + t.box[3]) / 2 / fh, 3)}
+                            for t, r in live]
                 snap = {"fps": round(fps, 1), "students": students,
                         "summary": summarize(r for _, r in live)}
                 with self._lock:

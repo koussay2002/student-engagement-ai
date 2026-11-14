@@ -4,148 +4,388 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Classroom engagement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#EEF1F4; --panel:#FFFFFF; --ink:#1B2430; --muted:#5B6877; --line:#D9DFE6;
-  --focused:#1F7A4A; --confused:#6B5BB5; --drowsy:#B7791F; --distracted:#C0392B; --unknown:#98A2AF;
+  --paper:#EEF0F3; --sheet:#FFFFFF; --ink:#16202C; --ink-2:#4A5666; --rule:#DDE2E8; --rule-2:#EBEEF2;
+  --accent:#0B6E8A;
+  --focused:#17795A; --confused:#5B4BC4; --drowsy:#B26E00; --distracted:#C0322B; --unknown:#7B8696;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Public Sans","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font:15px/1.45 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
-  font-variant-numeric:tabular-nums}
-header{display:flex;align-items:baseline;gap:16px;padding:18px 24px 6px}
-h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
-#conn{font-size:13px;color:var(--muted)}
-#conn[data-ok="1"]{color:var(--focused)}
-main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;padding:12px 24px 28px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
-.video{overflow:hidden}
-.video img{display:block;width:100%;height:auto;background:#cfd6de;min-height:240px}
-.mix-wrap{padding:16px 18px 18px;display:grid;gap:14px}
-.headline{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}
-.big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.03em}
-.cap{font-size:13px;color:var(--muted);margin-top:4px}
-#mix{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--line)}
-#mix div{min-width:4px;transition:flex-grow .4s}
-#legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--c)}
-canvas{width:100%;height:56px;display:block}
-aside{display:flex;flex-direction:column;min-height:0}
-aside h2{font-size:15px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:650}
-#roster{list-style:none;margin:0;padding:0;overflow:auto;max-height:calc(100vh - 140px)}
-.row{display:grid;grid-template-columns:78px 1fr 34px;gap:4px 10px;align-items:center;
-  padding:11px 16px;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}
-.sid{font-weight:600}
-.state{font-size:13.5px}
-.num{text-align:right;font-weight:650}
-.meter{grid-column:1/3;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-.meter i{display:block;height:100%;background:var(--c);transition:width .4s}
-.pred{grid-column:1/4;font-size:12.5px;color:var(--muted)}
-.empty{padding:22px 16px;color:var(--muted)}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);font:15px/1.5 var(--body);font-variant-numeric:tabular-nums}
+h1,h2,p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{max-width:1480px;margin:0 auto;padding:22px 28px 36px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+h1{font:700 26px/1.1 var(--display);letter-spacing:-.02em}
+.sub{margin-top:6px;color:var(--ink-2);font-size:14px;display:flex;gap:18px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.status i{width:9px;height:9px;border-radius:50%;background:var(--unknown)}
+.status[data-ok="1"] i{background:var(--focused)}
+.status[data-ok="1"]{color:var(--focused)}
+.actions{display:flex;align-items:center;gap:14px}
+.clock{color:var(--ink-2);font-size:14px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn:hover{background:#26364A}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,1fr);gap:20px;align-items:start}
+.left{display:grid;gap:20px;min-width:0}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:12px}
+
+.video{position:relative;margin:0;border-radius:14px;overflow:hidden;background:#C9D0D8;border:1px solid var(--rule)}
+.video img{display:block;width:100%;height:auto;min-height:260px}
+.video figcaption{position:absolute;left:14px;top:14px;background:var(--ink);color:#fff;border-radius:999px;
+  padding:4px 12px 4px 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.video figcaption i{width:8px;height:8px;border-radius:50%;background:#FF5A4F}
+.video[data-live="0"] figcaption i{background:var(--unknown)}
+
+.sheet-head{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 12px;gap:12px}
+h2{font:600 17px/1.2 var(--display);letter-spacing:-.01em}
+.note{font-size:13px;color:var(--ink-2)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:11px 20px;text-align:left;border-top:1px solid var(--rule-2);vertical-align:middle}
+th{font-weight:500;font-size:13px;color:var(--ink-2);padding-top:8px;padding-bottom:8px;background:#FAFBFC}
+th button{background:none;border:0;padding:0;cursor:pointer;font-weight:500;color:inherit}
+th button:hover{color:var(--ink)}
+th[aria-sort="ascending"] button::after{content:" \25B2";font-size:10px}
+th[aria-sort="descending"] button::after{content:" \25BC";font-size:10px}
+td.id{font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:8px;flex:none}
 [data-s="Focused"]{--c:var(--focused)} [data-s="Confused"]{--c:var(--confused)}
 [data-s="Drowsy"]{--c:var(--drowsy)} [data-s="Distracted"]{--c:var(--distracted)}
 [data-s="Unknown"]{--c:var(--unknown)}
-@media (max-width:900px){main{grid-template-columns:1fr;padding:12px}#roster{max-height:none}}
-@media (prefers-reduced-motion:reduce){#mix div,.meter i{transition:none}}
-a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+td small{color:var(--ink-2);margin-left:6px}
+.scorecell{display:flex;align-items:center;gap:10px;min-width:150px}
+.bar{flex:1;height:7px;border-radius:4px;background:var(--rule-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);transition:width .4s}
+.scorecell b{width:28px;text-align:right}
+.fc em{font-style:normal;color:var(--ink-2);margin-left:6px;font-size:13px}
+.empty{padding:20px;color:var(--ink-2);border-top:1px solid var(--rule-2)}
+
+.room{overflow:hidden;position:sticky;top:16px}
+.room section{padding:18px 20px;border-top:1px solid var(--rule)}
+.room section:first-child{border-top:0}
+.pulse-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.pulse-num{font:700 76px/.9 var(--display);letter-spacing:-.05em}
+.pulse-num span{font-size:22px;letter-spacing:0;color:var(--ink-2);margin-left:4px;font-weight:600}
+.pulse-cap{margin-top:8px;color:var(--ink-2);font-size:14px}
+.delta{font-size:14px;font-weight:600;text-align:right;max-width:150px}
+canvas{display:block;width:100%;height:96px;margin-top:14px}
+.small{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+
+#mix{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--rule-2);margin:12px 0 10px}
+#mix div{background:var(--c);transition:flex-grow .4s;min-width:6px}
+#legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13.5px}
+#legend span{display:inline-flex;align-items:center}
+
+.plan{position:relative;aspect-ratio:4/3;margin-top:12px;border:1px solid var(--rule);border-radius:10px;
+  background:
+    linear-gradient(var(--rule-2) 1px,transparent 1px) 0 0/100% 25%,
+    linear-gradient(90deg,var(--rule-2) 1px,transparent 1px) 0 0/16.66% 100%,#FBFCFD}
+.board{position:absolute;left:18%;right:18%;top:0;height:7%;background:var(--ink);color:#fff;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;border-radius:0 0 8px 8px}
+#seats{position:absolute;inset:0}
+.seat{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  border:2.5px solid var(--c);background:color-mix(in srgb,var(--c) 16%,#fff);font-size:12px;font-weight:600;
+  cursor:default;padding:0;display:grid;place-items:center;transition:left .35s,top .35s}
+.plan-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-2);font-size:14px;text-align:center;padding:0 24px}
+
+#attention{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:2px}
+#attention li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:0 4px;padding:8px 0;border-top:1px solid var(--rule-2)}
+#attention li:first-child{border-top:0}
+#attention .why{grid-column:2;font-size:13px;color:var(--ink-2)}
+#attention b{grid-row:1;grid-column:2}
+#attention .n{grid-row:1/3;grid-column:3;font:700 20px var(--display)}
+#attention .dot{grid-row:1/3}
+.privacy{padding:14px 20px 16px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink-2)}
+
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.room{position:static}.app{padding:16px}}
+@media (prefers-reduced-motion:reduce){.bar i,#mix div,.seat{transition:none}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Classroom engagement</h1>
-  <span id="conn">Connecting</span>
-</header>
-<main>
-  <section class="panel video">
-    <img src="/video" alt="Live classroom view with detected students">
-    <div class="mix-wrap">
-      <div class="headline">
-        <div><div class="big" id="avg">–</div><div class="cap">Class engagement</div></div>
-        <div><div class="big" id="count">0</div><div class="cap">Students tracked</div></div>
-        <div><div class="big" id="fps">0</div><div class="cap">Frames per second</div></div>
-      </div>
-      <div id="mix" role="img" aria-label="Share of students by state"></div>
-      <div id="legend"></div>
-      <canvas id="spark" height="56" aria-label="Class engagement over the last 30 seconds"></canvas>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Classroom engagement</h1>
+      <p class="sub">
+        <span class="status" id="conn" data-ok="0"><i></i><span id="connText">Connecting</span></span>
+        <span id="meta">Waiting for the first frame</span>
+      </p>
     </div>
-  </section>
-  <aside class="panel">
-    <h2>Students, lowest engagement first</h2>
-    <ul id="roster"><li class="empty">No students detected yet. Point the camera at the room, or start with <code>--source class.mp4</code>.</li></ul>
-  </aside>
-</main>
-<script>
-const STATES = ["Focused","Confused","Drowsy","Distracted","Unknown"];
-const $ = id => document.getElementById(id);
-const history = [];
+    <div class="actions">
+      <span class="clock" id="clock">Session 00:00</span>
+      <button class="btn" id="export" type="button">Export CSV</button>
+    </div>
+  </header>
 
-function seg(state, n){ const d = document.createElement("div"); d.dataset.s = state;
-  d.style.background = "var(--c)"; d.style.flexGrow = n; return d; }
+  <div class="grid">
+    <div class="left">
+      <figure class="video" id="video" data-live="0">
+        <img id="feed" src="/video" alt="Live classroom view with detected students">
+        <figcaption><i></i><span id="liveText">Connecting</span></figcaption>
+      </figure>
+
+      <section class="sheet">
+        <div class="sheet-head"><h2>Students</h2><span class="note" id="tableNote">Lowest engagement first</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th scope="col" data-key="id" aria-sort="none"><button type="button">Student</button></th>
+              <th scope="col">State</th>
+              <th scope="col" data-key="score" aria-sort="ascending"><button type="button">Engagement</button></th>
+              <th scope="col" data-key="predicted" aria-sort="none"><button type="button">In 5 minutes</button></th>
+            </tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="emptyRows">No students detected yet. Point the camera at the room, or start with <code>--source class.mp4</code>.</p>
+      </section>
+    </div>
+
+    <aside class="sheet room">
+      <section>
+        <div class="pulse-row">
+          <div>
+            <div class="pulse-num"><b id="avg" style="font-weight:inherit">–</b><span>/100</span></div>
+            <p class="pulse-cap">Class engagement</p>
+          </div>
+          <p class="delta" id="delta">Collecting a baseline</p>
+        </div>
+        <canvas id="spark" aria-label="Class engagement over the last two minutes"></canvas>
+        <p class="small" id="sessionStats">The dashed line marks 70, the focused threshold.</p>
+      </section>
+
+      <section>
+        <h2>Mix of states</h2>
+        <div id="mix" role="img" aria-label="Share of students by state"></div>
+        <div id="legend"></div>
+      </section>
+
+      <section>
+        <h2>Room plan</h2>
+        <p class="small" style="margin-top:2px">Each circle sits where that student appears in the camera view.</p>
+        <div class="plan">
+          <div class="board">Front of room</div>
+          <div id="seats"></div>
+          <p class="plan-empty" id="planEmpty">Students appear here once they are detected.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Needs attention</h2>
+        <ul id="attention"></ul>
+        <p class="small" id="attnEmpty">Nobody needs attention right now.</p>
+      </section>
+
+      <p class="privacy">Students are shown as anonymous IDs. Faces are analysed in memory and no images are stored.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+const STATES = ["Focused", "Confused", "Drowsy", "Distracted", "Unknown"];
+const REASON = {Distracted: "Looking away or on a phone", Drowsy: "Eyes closing",
+  Confused: "Head tilted, may be stuck", Unknown: "Face not visible", Focused: "Engagement is falling"};
+const HIST = 120;
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls;
+  if (text != null) n.textContent = text; return n; };
+
+const history = [];
+let lastSample = 0, sessionMin = null, sessionMax = null, last = null;
+let sort = {key: "score", dir: 1};
+const t0 = Date.now();
+
+/* Keeps one DOM node per id, updates it in place and orders the container. */
+function sync(parent, items, nodes, create, update){
+  const seen = new Set();
+  items.forEach((it, i) => {
+    seen.add(it.id);
+    let n = nodes.get(it.id);
+    if (!n){ n = create(it); nodes.set(it.id, n); }
+    update(n, it);
+    if (parent.children[i] !== n) parent.insertBefore(n, parent.children[i] || null);
+  });
+  for (const [id, n] of nodes){ if (!seen.has(id)){ n.remove(); nodes.delete(id); } }
+}
+
+const rowNodes = new Map(), seatNodes = new Map(), attnNodes = new Map();
+
+function trendWord(t){ return t >= 2 ? "rising" : t <= -2 ? "falling" : "steady"; }
+
+function createRow(){
+  const tr = el("tr");
+  const id = el("td", "id"), state = el("td"), score = el("td"), fc = el("td", "fc");
+  id.append(el("span", "dot"), el("span"));
+  state.append(el("span", "dot"), el("span"), el("small"));
+  const cell = el("div", "scorecell"), bar = el("span", "bar");
+  bar.append(el("i")); cell.append(bar, el("b")); score.append(cell);
+  fc.append(el("span"), el("em"));
+  tr.append(id, state, score, fc);
+  return tr;
+}
+function updateRow(tr, s){
+  tr.dataset.s = s.label;
+  const [id, state, score, fc] = tr.children;
+  id.children[1].textContent = s.id;
+  state.children[1].textContent = s.label;
+  state.children[2].textContent = s.confidence + "% sure";
+  score.querySelector("i").style.width = s.score + "%";
+  score.querySelector("b").textContent = s.score;
+  fc.children[0].textContent = s.predicted + "/100";
+  fc.children[1].textContent = trendWord(s.trend);
+}
+
+function createSeat(s){
+  const b = el("button", "seat"); b.type = "button"; b.tabIndex = -1; return b;
+}
+function updateSeat(b, s){
+  b.dataset.s = s.label;
+  b.textContent = s.id.slice(-2);
+  b.style.left = (Math.min(0.94, Math.max(0.06, s.x)) * 100) + "%";
+  b.style.top = (Math.min(0.94, Math.max(0.12, s.y)) * 100) + "%";
+  const text = `${s.id}: ${s.label}, engagement ${s.score} out of 100`;
+  b.title = text; b.setAttribute("aria-label", text);
+}
+
+function createAttn(){
+  const li = el("li");
+  li.append(el("span", "dot"), el("b"), el("span", "n"), el("span", "why"));
+  return li;
+}
+function updateAttn(li, s){
+  li.dataset.s = s.label;
+  li.children[1].textContent = s.id;
+  li.children[2].textContent = s.score;
+  li.children[3].textContent = s.label === "Focused" || s.trend <= -3 && s.label === "Focused"
+    ? REASON.Focused : REASON[s.label];
+}
+
+function sorted(list){
+  const k = sort.key;
+  return [...list].sort((a, b) => (k === "id" ? a.id.localeCompare(b.id) : a[k] - b[k]) * sort.dir);
+}
 
 function render(d){
-  const sum = d.summary;
-  $("avg").textContent = sum.count ? Math.round(sum.average) : "–";
-  $("count").textContent = sum.count;
-  $("fps").textContent = Math.round(d.fps);
+  last = d;
+  const s = d.summary, list = d.students;
+  $("meta").textContent = `${Math.round(d.fps)} frames per second, ${s.count} ${s.count === 1 ? "student" : "students"} tracked`;
 
+  // pulse
+  const avg = s.count ? s.average : null;
+  $("avg").textContent = avg == null ? "–" : Math.round(avg);
+  const now = Date.now();
+  if (avg != null && now - lastSample >= 1000){
+    lastSample = now; history.push(avg); if (history.length > HIST) history.shift();
+    sessionMin = sessionMin == null ? avg : Math.min(sessionMin, avg);
+    sessionMax = sessionMax == null ? avg : Math.max(sessionMax, avg);
+  }
+  if (history.length >= 10 && avg != null){
+    const ref = history[Math.max(0, history.length - 61)];
+    const diff = Math.round(avg - ref);
+    $("delta").textContent = diff === 0 ? "Steady over the last minute"
+      : `${diff > 0 ? "Up" : "Down"} ${Math.abs(diff)} over the last minute`;
+  } else { $("delta").textContent = "Collecting a baseline"; }
+  $("sessionStats").textContent = sessionMin == null
+    ? "The dashed line marks 70, the focused threshold."
+    : `Session low ${Math.round(sessionMin)}, high ${Math.round(sessionMax)}. The dashed line marks 70.`;
+  spark();
+
+  // mix
   const mix = $("mix"), legend = $("legend");
   mix.replaceChildren(); legend.replaceChildren();
-  for (const s of STATES){
-    const n = sum.counts[s] || 0;
+  for (const st of STATES){
+    const n = s.counts[st] || 0;
     if (!n) continue;
-    mix.appendChild(seg(s, n));
-    const item = document.createElement("span"); item.dataset.s = s;
-    const dot = document.createElement("span"); dot.className = "dot";
-    item.append(dot, `${s} ${n}`); legend.appendChild(item);
+    const seg = el("div"); seg.dataset.s = st; seg.style.flexGrow = n; mix.append(seg);
+    const item = el("span"); item.dataset.s = st; item.append(el("span", "dot"), document.createTextNode(`${st} ${n}`));
+    legend.append(item);
   }
 
-  const list = $("roster");
-  list.replaceChildren();
-  if (!d.students.length){
-    const li = document.createElement("li"); li.className = "empty";
-    li.textContent = "No students detected yet."; list.appendChild(li);
-  }
-  for (const st of [...d.students].sort((a,b) => a.score - b.score)){
-    const li = document.createElement("li"); li.className = "row"; li.dataset.s = st.label;
-    const id = document.createElement("span"); id.className = "sid"; id.textContent = st.id;
-    const state = document.createElement("span"); state.className = "state";
-    const dot = document.createElement("span"); dot.className = "dot";
-    state.append(dot, `${st.label}, ${st.confidence}% sure`);
-    const num = document.createElement("span"); num.className = "num"; num.textContent = st.score;
-    const meter = document.createElement("span"); meter.className = "meter";
-    const bar = document.createElement("i"); bar.style.width = st.score + "%"; meter.appendChild(bar);
-    const arrow = st.trend >= 2 ? "rising" : st.trend <= -2 ? "falling" : "steady";
-    const pred = document.createElement("span"); pred.className = "pred";
-    pred.textContent = `Forecast in 5 min: ${st.predicted}/100 (${arrow})`;
-    li.append(id, state, num, meter, pred); list.appendChild(li);
-  }
-
-  if (sum.count){ history.push(sum.average); if (history.length > 150) history.shift(); }
-  spark();
+  // table, plan, attention
+  sync($("rows"), sorted(list), rowNodes, createRow, updateRow);
+  $("emptyRows").hidden = list.length > 0;
+  sync($("seats"), list, seatNodes, createSeat, updateSeat);
+  $("planEmpty").hidden = list.length > 0;
+  const need = list.filter(x => (x.label !== "Focused" && x.label !== "Unknown") || x.trend <= -3)
+    .sort((a, b) => a.score - b.score).slice(0, 5);
+  sync($("attention"), need, attnNodes, createAttn, updateAttn);
+  $("attnEmpty").hidden = need.length > 0;
 }
 
 function spark(){
-  const c = $("spark"), r = devicePixelRatio || 1;
-  c.width = c.clientWidth * r; c.height = 56 * r;
-  const g = c.getContext("2d"); g.scale(r, r);
-  const w = c.clientWidth, h = 56;
-  g.clearRect(0, 0, w, h);
-  g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--line");
-  g.beginPath(); g.moveTo(0, h/2); g.lineTo(w, h/2); g.stroke();
-  if (history.length < 2) return;
-  g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink");
-  g.lineWidth = 2; g.beginPath();
-  history.forEach((v, i) => { const x = i / (history.length - 1) * w, y = h - 4 - v / 100 * (h - 8);
-    i ? g.lineTo(x, y) : g.moveTo(x, y); });
-  g.stroke();
+  const c = $("spark"), r = window.devicePixelRatio || 1, w = c.clientWidth, h = 96;
+  if (!w) return;
+  c.width = Math.round(w * r); c.height = h * r;
+  const g = c.getContext("2d"); g.setTransform(r, 0, 0, r, 0, 0); g.clearRect(0, 0, w, h);
+  const css = getComputedStyle(document.documentElement);
+  const accent = css.getPropertyValue("--accent").trim(), rule = css.getPropertyValue("--rule").trim();
+  const y = v => h - 6 - (v / 100) * (h - 12);
+  g.strokeStyle = rule; g.lineWidth = 1; g.setLineDash([4, 4]);
+  g.beginPath(); g.moveTo(0, y(70)); g.lineTo(w, y(70)); g.stroke(); g.setLineDash([]);
+  const n = history.length; if (n < 2) return;
+  const x = i => w - ((n - 1 - i) / (HIST - 1)) * w;
+  g.beginPath(); history.forEach((v, i) => i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v)));
+  g.lineTo(x(n - 1), h); g.lineTo(x(0), h); g.closePath();
+  g.globalAlpha = .12; g.fillStyle = accent; g.fill(); g.globalAlpha = 1;
+  g.beginPath(); history.forEach((v, i) => i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v)));
+  g.strokeStyle = accent; g.lineWidth = 2.2; g.lineJoin = "round"; g.stroke();
+  g.beginPath(); g.arc(x(n - 1), y(history[n - 1]), 4, 0, Math.PI * 2); g.fillStyle = accent; g.fill();
 }
+addEventListener("resize", spark);
 
+// sorting
+document.querySelectorAll("th[data-key]").forEach(th => th.querySelector("button").addEventListener("click", () => {
+  const key = th.dataset.key;
+  sort = sort.key === key ? {key, dir: -sort.dir} : {key, dir: 1};
+  document.querySelectorAll("th[data-key]").forEach(o => o.setAttribute("aria-sort",
+    o.dataset.key === sort.key ? (sort.dir === 1 ? "ascending" : "descending") : "none"));
+  const names = {id: "student", score: "engagement", predicted: "forecast"};
+  $("tableNote").textContent = key === "score" && sort.dir === 1 ? "Lowest engagement first"
+    : `Sorted by ${names[key]}, ${sort.dir === 1 ? "ascending" : "descending"}`;
+  if (last) render(last);
+}));
+
+// export
+$("export").addEventListener("click", () => {
+  if (!last || !last.students.length) return;
+  const rows = [["student", "state", "confidence_pct", "engagement", "forecast_5min", "trend_per_min"]];
+  last.students.forEach(s => rows.push([s.id, s.label, s.confidence, s.score, s.predicted, s.trend]));
+  const blob = new Blob([rows.map(r => r.join(",")).join("\n")], {type: "text/csv"});
+  const a = el("a"); a.href = URL.createObjectURL(blob);
+  const d = new Date(), p = v => String(v).padStart(2, "0");
+  a.download = `engagement-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+
+// session clock
+setInterval(() => {
+  const s = Math.floor((Date.now() - t0) / 1000), p = v => String(v).padStart(2, "0");
+  $("clock").textContent = `Session ${p(Math.floor(s / 60))}:${p(s % 60)}`;
+}, 1000);
+
+// connection
+let wasClosed = false;
+function setLive(ok){
+  $("conn").dataset.ok = ok ? "1" : "0";
+  $("connText").textContent = ok ? "Live" : "Reconnecting";
+  $("video").dataset.live = ok ? "1" : "0";
+  $("liveText").textContent = ok ? "Live" : "Reconnecting";
+}
 function connect(){
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
-  ws.onopen = () => { $("conn").textContent = "Live"; $("conn").dataset.ok = "1"; };
+  ws.onopen = () => { setLive(true); if (wasClosed){ $("feed").src = "/video?" + Date.now(); wasClosed = false; } };
   ws.onmessage = e => render(JSON.parse(e.data));
-  ws.onclose = () => { $("conn").textContent = "Reconnecting"; $("conn").dataset.ok = "0"; setTimeout(connect, 1500); };
+  ws.onclose = () => { wasClosed = true; setLive(false); setTimeout(connect, 1500); };
 }
 connect();
 </script>
